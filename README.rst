@@ -9,7 +9,11 @@
 
 Welcome to wechinelearn Documentation
 ===============================================================================
-``wechinelearn`` is a Weather data based machine learning R&D framework.
+``wechinelearn`` is a Weather data based machine learning R&D framework. Basically, if you want to use weather data to build a classification/prediction model, this framework could help.
+
+The first major problem in model R&D is handling big dataset. ``wechinelearn`` can use any relational database as back-end, and easy to extend for adding more data or data point. Using database can greatly reduce the average time cost for trying your idea.
+
+Your target object, could be a user, a region or anything associated with local weather by location. One major problem ``wechinelearn`` solved is finding best weather data for your target, and also takes `missing data points`, `unreliable data points`, `multiple data source choice` into account.
 
 
 **Quick Links**

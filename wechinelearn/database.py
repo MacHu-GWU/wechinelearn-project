@@ -2,23 +2,29 @@
 # -*- coding: utf-8 -*-
 
 """
-(
-    engine,
-    t_station, 
-    t_weather_raw, 
-    t_weather,
-    t_object, 
-    t_object_data_raw,
-    t_object_data,
-    t_feature_raw, 
-    t_feature,
-)
+This module defines the data schema. 
+
+There are 8 major table used in this app. Let's go through them one by one.
+
+database schema settings::
+
+    (
+        engine,
+        t_station, 
+        t_weather_raw, 
+        t_weather,
+        t_object, 
+        t_object_data_raw,
+        t_object_data,
+        t_feature_raw, 
+        t_feature,
+    )
 
 
 Work flow:
 
-1. station
-2. object
+1. station metadata
+2. object metadata
 3. weather raw => weather data
 4. object raw => object data
 5. weather data + object data => feature raw
@@ -31,10 +37,11 @@ from sqlalchemy import create_engine, MetaData, Table, Column, ForeignKey, Index
 from sqlalchemy import String, Integer, Float, DateTime, Boolean
 from sqlalchemy import select, and_, func, distinct
 
-from .config import db_url
+try:
+    from .config import db_url
+except:
+    from wechinelearn.config import db_url
     
-
-db_url
 engine = create_engine(db_url)
 metadata = MetaData()
 
@@ -46,6 +53,10 @@ t_station = Table("station", metadata,
     Column("lng", Float),
     # More attributes may added
 )
+"""
+A weather station must have id, lat, lng; Any observed weather data is associated
+with a station.
+"""
 
 # Weather Raw Data
 # Label:
@@ -60,6 +71,11 @@ t_weather_raw = Table("weather_raw", metadata,
     Column("label", Integer, primary_key=True),
     Column("value", Float),
 )
+"""
+Weather raw data table, data could be non-interpolated, sparse and arbitrary
+many data points. For example, no matter how many data points we have, outdoorTemp,
+solarPower, windSpeed, humidity, ..., etc, we put them here.
+"""
 
 # Weather Data Interpolated
 t_weather = Table("weather", metadata,
@@ -69,6 +85,11 @@ t_weather = Table("weather", metadata,
     Column("outdoorTempReliab", Boolean),
     # More data points may added
 )
+"""
+This is processed weather data. All kinds of observation at same time will be 
+put here. We put interpolated, processed here. Time axis has to be continues.
+For those moment doesn't have valid data, we fill in with Null value.
+"""
 
 #--- Object ---
 # Object Meta Data
@@ -78,6 +99,10 @@ t_object = Table("object", metadata,
     Column("lng", Float),
     # More attributes may added
 )
+"""
+Your analysis target. Must have lat, lng info. wechinelearn use this to local
+couple of nearby stations and automatically find the best weather data.
+"""
 
 # Object Raw Data
 t_object_data_raw = Table("object_data_raw", metadata,
@@ -86,6 +111,9 @@ t_object_data_raw = Table("object_data_raw", metadata,
     Column("label", Integer, primary_key=True),
     Column("value", Float),
 )
+"""
+Similar to weather raw data, but it's about your target.
+"""
 
 # Object Data Interpolated
 t_object_data = Table("object_data", metadata,
@@ -95,23 +123,30 @@ t_object_data = Table("object_data", metadata,
     Column("loadReliab", Boolean),
     # More data points may added
 )
+"""
+Similar to weather data, it's interpolated, processed data.
+"""
 
 #--- Feature ---
 # Raw Feature Data, merged from Weather, Object
 t_feature_raw = Table("feature_raw", metadata,
     Column("object_id", String, ForeignKey("object.id"), primary_key=True),
     Column("time", DateTime, primary_key=True),
-    Column("hour", Integer),
+    Column("dayseconds", Float),
     Column("is_weekend", Boolean),
     Column("outdoorTemp", Float),
     Column("load", Float),
 )
+"""
+This table is a result of merging weather and object data on the time axis.
+This table only have data points you observed.
+"""
 
 # Feature Data, include derived feature
 t_feature = Table("feature", metadata,
-    Column("user_id", String, ForeignKey("station.id"), primary_key=True),
+    Column("object_id", String, ForeignKey("object.id"), primary_key=True),
     Column("time", DateTime, primary_key=True),
-    Column("hour", Integer),
+    Column("dayseconds", Float),
     Column("is_weekend", Boolean),
     Column("outdoorTemp", Float),
     Column("outdoorTemp_1hourDelta", Float),
@@ -126,5 +161,15 @@ t_feature = Table("feature", metadata,
     Column("load_4hourDelta", Float),
     Column("load_1DayDelta", Float),
 )
+"""
+Sometimes you need to derive more features for your model. Then you need to 
+take data out from ``feature_raw``, and even more from others, then put everything
+here, so finally you have a nicely organized tabulate dataset. You can easily
+choose any subset and plug in any machine learning model.
+"""
 
 metadata.create_all(engine)
+
+if __name__ == "__main__":
+    from datetime import datetime
+    
