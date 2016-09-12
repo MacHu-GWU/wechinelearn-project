@@ -28,7 +28,7 @@ Your target object, could be a user, a region or anything associated with local 
 
 .. _install:
 
-Install (**Not available yet**)
+Install
 -------------------------------------------------------------------------------
 
 ``wechinelearn`` is released on PyPI, so all you need is:
@@ -42,3 +42,5 @@ To upgrade to latest version:
 .. code-block:: console
 
 	$ pip install --upgrade wechinelearn
+
+If you have problem with installing ``numpy`` in Windows, download the compiled wheel file `here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy>`_, and install it with pip.
